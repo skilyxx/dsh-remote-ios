@@ -1,0 +1,12 @@
+# macOS / Xcode
+build/
+DerivedData/
+Payload/
+*.ipa
+*.dSYM
+*.xcuserstate
+xcuserdata/
+.DS_Store
+
+# XcodeGen 生成物（工程已入库，重新生成时才会变）
+# DSHRemote.xcodeproj

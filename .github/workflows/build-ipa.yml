@@ -1,0 +1,52 @@
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build DSHRemote.ipa
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+
+      - name: Ensure Xcode project exists
+        run: |
+          if xcodebuild -list -project DSHRemote.xcodeproj >/dev/null 2>&1; then
+            echo "仓库内的 Xcode 工程可用，直接使用。"
+          else
+            echo "Xcode 工程不可用，改为用 XcodeGen 从 project.yml 生成。"
+            brew install xcodegen
+            xcodegen generate
+            xcodebuild -list -project DSHRemote.xcodeproj
+          fi
+
+      - name: Build unsigned IPA
+        run: ./scripts/build-ipa.sh
+
+      - name: Show IPA info
+        run: |
+          ls -lh DSHRemote.ipa
+          unzip -l DSHRemote.ipa | head -20
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: DSHRemote-unsigned-ipa
+          path: DSHRemote.ipa
+          if-no-files-found: error
+          retention-days: 30
