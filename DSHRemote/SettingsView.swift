@@ -10,6 +10,10 @@ struct SettingsView: View {
     /// 点「保存并连接」后的回调（由 RootView 触发重新加载）。
     let onSave: () -> Void
 
+    init(onSave: @escaping () -> Void) {
+        self.onSave = onSave
+    }
+
     @State private var urlText = ""
     @State private var tokenText = ""
     @State private var ignoreTLS = true

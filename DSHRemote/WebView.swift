@@ -10,16 +10,18 @@ struct WebView: UIViewRepresentable {
 
     @ObservedObject var model: WebViewModel
 
-    /// 深色底，避免加载瞬间白闪。
-    private let backgroundColor = UIColor(red: 13 / 255, green: 17 / 255, blue: 23 / 255, alpha: 1)
+    /// 显式给出构造器：避免把内部实现细节暴露成 memberwise init 的可见性问题。
+    init(model: WebViewModel) {
+        self.model = model
+    }
 
     func makeUIView(context: Context) -> WKWebView {
+        let background = UIColor(red: 13 / 255, green: 17 / 255, blue: 23 / 255, alpha: 1)
+
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
         configuration.mediaTypesRequiringUserActionForPlayback = []
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
-        // iOS 15.4+：允许页面元素进入全屏（会话详情里的全屏输入等）。
-        configuration.preferences.isElementFullscreenEnabled = true
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = model
@@ -28,8 +30,8 @@ struct WebView: UIViewRepresentable {
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.keyboardDismissMode = .interactive
         webView.isOpaque = false
-        webView.backgroundColor = backgroundColor
-        webView.scrollView.backgroundColor = backgroundColor
+        webView.backgroundColor = background
+        webView.scrollView.backgroundColor = background
 
         if #available(iOS 16.4, *) {
             // 方便用 Safari 远程调试（自用 App，开着更省事）。

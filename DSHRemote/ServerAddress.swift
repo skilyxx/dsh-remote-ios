@@ -39,7 +39,7 @@ enum ServerAddress {
             return [normalize(text)].compactMap { $0 }
         }
 
-        let host = String(text.split(separator: "/", maxSplits: 1)[0])
+        let host = text.split(separator: "/", maxSplits: 1).first.map(String.init) ?? ""
         guard !host.isEmpty else { return [] }
         return [normalize("https://" + text), normalize("http://" + text)].compactMap { $0 }
     }

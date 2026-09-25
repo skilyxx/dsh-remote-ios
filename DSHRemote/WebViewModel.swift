@@ -155,25 +155,22 @@ final class WebViewModel: NSObject, ObservableObject {
     private func scheduleRetry() {
         guard autoRetryEnabled, retryAttempt < Self.maxAutoRetry else { return }
         retryAttempt += 1
-        var remaining = min(8, Int(pow(2.0, Double(retryAttempt))))  // 2 / 4 / 8 秒
-        retryCountdown = remaining
+        // 2 / 4 / 8 秒退火
+        retryCountdown = min(8, Int(pow(2.0, Double(retryAttempt))))
 
         retryTimer?.invalidate()
         retryTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
-            remaining -= 1
             guard let self else {
                 timer.invalidate()
                 return
             }
-            if remaining <= 0 {
-                timer.invalidate()
-                self.retryTimer = nil
-                self.retryCountdown = 0
-                if let webView = self.webView, let target = self.target {
-                    self.start(target, on: webView)
-                }
-            } else {
-                self.retryCountdown = remaining
+            self.retryCountdown -= 1
+            guard self.retryCountdown <= 0 else { return }
+            timer.invalidate()
+            self.retryTimer = nil
+            self.retryCountdown = 0
+            if let webView = self.webView, let target = self.target {
+                self.start(target, on: webView)
             }
         }
     }

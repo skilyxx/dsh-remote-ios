@@ -7,7 +7,7 @@ on:
     tags: [ 'v*' ]
 
 permissions:
-  contents: read
+  contents: write   # 失败时把诊断日志推到 ci-diagnostics 分支
 
 jobs:
   build:
@@ -36,7 +36,9 @@ jobs:
           fi
 
       - name: Build unsigned IPA
-        run: ./scripts/build-ipa.sh
+        run: |
+          set -o pipefail
+          ./scripts/build-ipa.sh 2>&1 | tee build-output.log
 
       - name: Show IPA info
         run: |
@@ -50,3 +52,40 @@ jobs:
           path: DSHRemote.ipa
           if-no-files-found: error
           retention-days: 30
+
+      # ---- 失败时的诊断：把编译错误推到 ci-diagnostics 分支，便于直接读取 ----
+      - name: Collect build diagnostics
+        if: failure()
+        run: |
+          {
+            echo "# 构建失败诊断"
+            echo
+            echo "- 运行: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- 提交: $GITHUB_SHA"
+            echo
+            echo "## 编译错误 / 失败命令"
+            echo '```text'
+            grep -nE "error:|fatal error|BUILD FAILED|The following build commands failed|error generated" -A 3 build-output.log | head -300 || true
+            echo '```'
+            echo
+            echo "## 日志最后 100 行"
+            echo '```text'
+            tail -100 build-output.log || true
+            echo '```'
+          } > build-error.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci-diagnostics
+          git add -f build-error.md
+          git commit -m "ci: 构建诊断 (run $GITHUB_RUN_NUMBER)" || true
+          git push -f origin ci-diagnostics
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build-output.log
+          if-no-files-found: ignore
+          retention-days: 14

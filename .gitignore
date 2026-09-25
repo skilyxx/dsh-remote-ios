@@ -8,5 +8,6 @@ Payload/
 xcuserdata/
 .DS_Store
 
-# XcodeGen 生成物（工程已入库，重新生成时才会变）
-# DSHRemote.xcodeproj
+# CI 诊断产物
+build-output.log
+build-error.md
