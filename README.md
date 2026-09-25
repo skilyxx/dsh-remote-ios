@@ -129,7 +129,7 @@ App 已在 `Info.plist` 注册 `dshremote` URL scheme 来接这个深链。二�
 - **未签名 IPA 装出来的 App 没有推送权限**；免费账号 7 天过期。
 - 如果以后官方出了 iOS 版 DSH Remote，两边都会注册 `dshremote://`，iOS 只会认一个。
 - 令牌存在 UserDefaults 里（不是 Keychain）。自用够，但别把这个 App 分享给别人的设备。
-- **本机没有 macOS / Xcode，所以代码只做了静态校验**（见第 8 节），真正的编译验证在 GitHub Actions 第一次跑的时候。
+- 代码已在 GitHub Actions 的 macOS runner 上编译通过，但**未在真机跑过**（我手上没有 iPhone）。
 
 ---
 
@@ -178,7 +178,12 @@ dsh-remote-ios/
 - 所有 `Contents.json` JSON 合法、图标文件名与磁盘一致、无透明度；
 - `Info.plist` 用 plistlib 解析通过；`build-ipa.sh` 通过 `bash -n`；两个 YAML 解析通过。
 
-**没做的**：类型检查与真机运行（需要 Xcode）。第一次 Actions 运行如果报编译错误，把日志贴给我即可。
+**没做的**：真机运行（本机没有 iPhone 和 Windows）。
+
+**已由 CI 验证**：GitHub Actions 在 macOS runner 上完整编译通过并产出 IPA（2026-09-25）。
+
+工作流带自诊断：构建失败时会把编译错误汇总成 `build-error.md` 推到 `ci-diagnostics` 分支，
+再配合 `build-log` artifact，不用登录也能读到失败原因。修完推送后该分支会更新或删除即可。
 
 ---
 
